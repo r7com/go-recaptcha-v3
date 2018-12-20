@@ -62,11 +62,12 @@ func check(remoteip, response string) (r RecaptchaResponse, err error) {
 func Confirm(remoteip, response string) (result bool, err error) {
 	result = false
 	resp, err := check(remoteip, response)
-	fmt.Printf("Your score was %f", resp.Score)
 
 	if resp.Success == true && resp.Score >= recaptchaScore {
 		result = true
 	}
+
+	logCaptchaResult(result, resp.Score)
 
 	return
 }
@@ -75,4 +76,12 @@ func Confirm(remoteip, response string) (result bool, err error) {
 // reCaptcha private key (string) value, which will be different for every domain.
 func Init(key string) {
 	recaptchaPrivateKey = key
+}
+
+func logCaptchaResult(success bool, score float32) {
+	if success {
+		log.Printf("Captcha: valid token with score of %f\n", score)
+	} else {
+		log.Printf("Captcha: invalid token")
+	}
 }
