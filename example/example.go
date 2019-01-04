@@ -8,11 +8,12 @@ package main
 
 import (
 	"fmt"
-	"github.com/dpapathanasiou/go-recaptcha"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	recaptcha "gitlab.ir7.com.br/r7/go-recaptcha"
 )
 
 var recaptchaPublicKey string
@@ -22,12 +23,44 @@ const (
 <style>.error{color:#ff0000;} .ack{color:#0000ff;}</style><title>Recaptcha Test</title></head>
 <body><div style="width:100%"><div style="width: 50%;margin: 0 auto;">
 <h3>Recaptcha Test</h3>
-<p>This is a test form for the go-recaptcha package</p>`
-	form = `<form action="/" method="POST">
-	    <script src="https://www.google.com/recaptcha/api.js"></script>
-			<div class="g-recaptcha" data-sitekey="%s"></div>
-    	<input type="submit" name="button" value="Ok">
-</form>`
+<p>This is a token generator</p>`
+	form = `
+    <!-- %s -->
+    <script src='https://www.google.com/recaptcha/api.js?render=6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03'></script>
+
+    <script>
+      grecaptcha.ready(function() {
+        grecaptcha.execute('6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03', {action: 'action_name'})
+        .then(function(token) {
+          document.getElementById("g-recaptcha-response-holder").innerHTML= token
+        });
+      });
+
+      function generateToken() {
+        grecaptcha.execute('6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03', {action: 'action_name'})
+          .then(function(token) {
+            document.getElementById("g-recaptcha-response-holder").innerHTML= token
+        });
+      }
+    </script>
+    <textarea id="g-recaptcha-response-holder" style="margin: 0px; width: 600px; height: 100px;"></textarea>
+    </br>
+    <button id="g-recaptcha-generate" onclick="generateToken()">Generate new token</button>`
+	// form = `
+	//   <script src="https://sc.r7.com/r7/captcha/v3/r7-recaptcha-bundle.js"></script>
+	//   <script>
+	//     // %s
+	//     window.onload = function() {
+	//       R7Recaptcha.injectRecaptcha('6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03')
+	//     }
+	//
+	//     function generateToken() {
+	//       R7Recaptcha.newToken((token)=>{ document.getElementById("g-recaptcha-response-holder").innerHTML= token }, "homepage")
+	//     }
+	//   </script>
+	//   <textarea id="g-recaptcha-response-holder" style="margin: 0px; width: 600px; height: 100px;"></textarea>
+	//   </br>
+	//   <button id="g-recaptcha-generate" onclick="generateToken()">Generate new token</button>`
 	pageBottom = `</div></div></body></html>`
 	anError    = `<p class="error">%s</p>`
 	anAck      = `<p class="ack">%s</p>`
@@ -64,9 +97,9 @@ func homePage(writer http.ResponseWriter, request *http.Request) {
 		_, buttonClicked := request.Form["button"]
 		if buttonClicked {
 			if processRequest(request) {
-				fmt.Fprint(writer, fmt.Sprintf(anAck, "Recaptcha was correct!"))
+				// fmt.Fprint(writer, fmt.Sprintf(anAck, "Recaptcha was correct!"))
 			} else {
-				fmt.Fprintf(writer, fmt.Sprintf(anError, "Recaptcha was incorrect; try again."))
+				// fmt.Fprintf(writer, fmt.Sprintf(anError, "Recaptcha was incorrect; try again."))
 			}
 		}
 	}

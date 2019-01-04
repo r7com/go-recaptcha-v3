@@ -4,7 +4,7 @@
 // which offers reCaptcha form inputs and requires them to be evaluated for correctness
 //
 // Edit the recaptchaPrivateKey constant before building and using
-package models
+package recaptcha
 
 import (
 	"encoding/json"
@@ -25,17 +25,17 @@ type RecaptchaResponse struct {
 }
 
 const recaptchaServerName = "https://www.google.com/recaptcha/api/siteverify"
-const recaptchaScore = 0.3
 
 var recaptchaPrivateKey string
+var recaptchaScore float32
 
 // check uses the client ip address, the challenge code from the reCaptcha form,
 // and the client's response input to that challenge to determine whether or not
 // the client answered the reCaptcha input question correctly.
 // It returns a boolean value indicating whether or not the client answered correctly.
-func check(remoteip, response string) (r RecaptchaResponse, err error) {
+func check(response string) (r RecaptchaResponse, err error) {
 	resp, err := http.PostForm(recaptchaServerName,
-		url.Values{"secret": {recaptchaPrivateKey}, "remoteip": {remoteip}, "response": {response}})
+		url.Values{"secret": {recaptchaPrivateKey}, "response": {response}})
 	if err != nil {
 		log.Printf("Post error: %s\n", err)
 		return
@@ -59,9 +59,9 @@ func check(remoteip, response string) (r RecaptchaResponse, err error) {
 // and the client's response input to that challenge to determine whether or not
 // the client answered the reCaptcha input question correctly.
 // It returns a boolean value indicating whether or not the client answered correctly.
-func Confirm(remoteip, response string) (result bool, err error) {
+func Confirm(response string) (result bool, err error) {
 	result = false
-	resp, err := check(remoteip, response)
+	resp, err := check(response)
 
 	if resp.Success == true && resp.Score >= recaptchaScore {
 		result = true
@@ -74,14 +74,15 @@ func Confirm(remoteip, response string) (result bool, err error) {
 
 // Init allows the webserver or code evaluating the reCaptcha form input to set the
 // reCaptcha private key (string) value, which will be different for every domain.
-func Init(key string) {
+func Init(key string, score float32) {
 	recaptchaPrivateKey = key
+	recaptchaScore = score
 }
 
 func logCaptchaResult(success bool, score float32) {
 	if success {
-		log.Printf("Captcha: valid token with score of %f\n", score)
+		log.Printf("Captcha: Valid token with score of %f\n", score)
 	} else {
-		log.Printf("Captcha: invalid token")
+		log.Printf("Captcha: Invalid token")
 	}
 }
