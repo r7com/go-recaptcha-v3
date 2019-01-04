@@ -13,7 +13,7 @@ go build example.go
 Run the server<sup>&#42;</sup> by invoking the executable:
 
 ```
-./example <reCaptcha public key (aka Site key)> <reCaptcha private key (aka Secret key)>
+./example <reCaptcha public key (aka Site key)>
 ```
 
 You can access the page from http://localhost:9001/ in your browser.

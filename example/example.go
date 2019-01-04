@@ -25,19 +25,18 @@ const (
 <h3>Recaptcha Test</h3>
 <p>This is a token generator</p>`
 	form = `
-    <!-- %s -->
-    <script src='https://www.google.com/recaptcha/api.js?render=6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03'></script>
+    <script src='https://www.google.com/recaptcha/api.js?render=%s'></script>
 
     <script>
       grecaptcha.ready(function() {
-        grecaptcha.execute('6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03', {action: 'action_name'})
+        grecaptcha.execute('%s', {action: 'action_name'})
         .then(function(token) {
           document.getElementById("g-recaptcha-response-holder").innerHTML= token
         });
       });
 
       function generateToken() {
-        grecaptcha.execute('6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03', {action: 'action_name'})
+        grecaptcha.execute('%s', {action: 'action_name'})
           .then(function(token) {
             document.getElementById("g-recaptcha-response-holder").innerHTML= token
         });
@@ -46,21 +45,6 @@ const (
     <textarea id="g-recaptcha-response-holder" style="margin: 0px; width: 600px; height: 100px;"></textarea>
     </br>
     <button id="g-recaptcha-generate" onclick="generateToken()">Generate new token</button>`
-	// form = `
-	//   <script src="https://sc.r7.com/r7/captcha/v3/r7-recaptcha-bundle.js"></script>
-	//   <script>
-	//     // %s
-	//     window.onload = function() {
-	//       R7Recaptcha.injectRecaptcha('6LdomoYUAAAAALNFVBV_Etyu_v72PtvegyLTdm03')
-	//     }
-	//
-	//     function generateToken() {
-	//       R7Recaptcha.newToken((token)=>{ document.getElementById("g-recaptcha-response-holder").innerHTML= token }, "homepage")
-	//     }
-	//   </script>
-	//   <textarea id="g-recaptcha-response-holder" style="margin: 0px; width: 600px; height: 100px;"></textarea>
-	//   </br>
-	//   <button id="g-recaptcha-generate" onclick="generateToken()">Generate new token</button>`
 	pageBottom = `</div></div></body></html>`
 	anError    = `<p class="error">%s</p>`
 	anAck      = `<p class="ack">%s</p>`
@@ -72,7 +56,7 @@ const (
 func processRequest(request *http.Request) (result bool) {
 	recaptchaResponse, responseFound := request.Form["g-recaptcha-response"]
 	if responseFound {
-		result, err := recaptcha.Confirm("127.0.0.1", recaptchaResponse[0])
+		result, err := recaptcha.Confirm(recaptchaResponse[0])
 		if err != nil {
 			log.Println("recaptcha server error", err)
 		}
@@ -103,7 +87,8 @@ func homePage(writer http.ResponseWriter, request *http.Request) {
 			}
 		}
 	}
-	fmt.Fprint(writer, fmt.Sprintf(form, recaptchaPublicKey))
+	fmt.Fprint(writer, fmt.Sprintf(form, recaptchaPublicKey, recaptchaPublicKey, recaptchaPublicKey))
+
 	fmt.Fprint(writer, pageBottom)
 }
 
@@ -112,12 +97,12 @@ func homePage(writer http.ResponseWriter, request *http.Request) {
 // It launches a simple web server on port 9001 which produces the reCaptcha input form and checks the client
 // input if the form is posted.
 func main() {
-	if len(os.Args) != 3 {
-		fmt.Printf("usage: %s <reCaptcha public key> <reCaptcha private key>\n", filepath.Base(os.Args[0]))
+	if len(os.Args) != 2 {
+		fmt.Printf("usage: %s <reCaptcha public key>\n", filepath.Base(os.Args[0]))
 		os.Exit(1)
 	} else {
 		recaptchaPublicKey = os.Args[1]
-		recaptcha.Init(os.Args[2])
+		// recaptcha.Init(os.Args[2], 0.5)
 
 		http.HandleFunc("/", homePage)
 		if err := http.ListenAndServe(":9001", nil); err != nil {
