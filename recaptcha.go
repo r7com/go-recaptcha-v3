@@ -83,6 +83,10 @@ func logCaptchaResult(success bool, score float32) {
 	if success {
 		log.Printf("Captcha: Valid token with score of %f\n", score)
 	} else {
-		log.Printf("Captcha: Invalid token")
+		if score > 0 {
+			log.Printf("Captcha: Valid token but refused due low score(got: %f, expected: %f)", score, recaptchaScore)
+		} else {
+			log.Printf("Captcha: Invalid token")
+		}
 	}
 }
