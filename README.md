@@ -12,10 +12,10 @@ Usage
 Install the package in your environment:
 
 ```
-go get github.com/r7com/go-recaptcha
+go get github.com/r7com/go-recaptcha-v3
 ```
 
-To use it within your own code, import <tt>github.com/r7com/go-recaptcha</tt> and call:
+To use it within your own code, import <tt>github.com/r7com/go-recaptcha-v3</tt> and call:
 
 ```
 recaptcha.Init(recaptchaPrivateKey, recaptchaScore)
