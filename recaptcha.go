@@ -28,16 +28,22 @@ const recaptchaServerName = "https://www.google.com/recaptcha/api/siteverify"
 
 var recaptchaPrivateKey string
 var recaptchaScore float32
+var timeResponse int
+var postError bool
 
 // check uses the client ip address, the challenge code from the reCaptcha form,
 // and the client's response input to that challenge to determine whether or not
 // the client answered the reCaptcha input question correctly.
 // It returns a boolean value indicating whether or not the client answered correctly.
 func check(response string) (r RecaptchaResponse, err error) {
-	resp, err := http.PostForm(recaptchaServerName,
+	netClient := &http.Client{
+		Timeout: time.Duration(timeResponse) * time.Second,
+	}
+	resp, err := netClient.PostForm(recaptchaServerName,
 		url.Values{"secret": {recaptchaPrivateKey}, "response": {response}})
 	if err != nil {
 		log.Printf("Post error: %s\n", err)
+		postError = true
 		return
 	}
 	defer resp.Body.Close()
@@ -67,6 +73,10 @@ func Confirm(response string) (result bool, err error) {
 		result = true
 	}
 
+	if postError == true {
+		result = true
+	}
+
 	logCaptchaResult(result, resp.Score)
 
 	return
@@ -74,9 +84,10 @@ func Confirm(response string) (result bool, err error) {
 
 // Init allows the webserver or code evaluating the reCaptcha form input to set the
 // reCaptcha private key (string) value, which will be different for every domain.
-func Init(key string, score float32) {
+func Init(key string, score float32, time int) {
 	recaptchaPrivateKey = key
 	recaptchaScore = score
+	timeResponse = time
 }
 
 func logCaptchaResult(success bool, score float32) {
