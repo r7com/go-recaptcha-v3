@@ -36,9 +36,12 @@ var postError bool
 // the client answered the reCaptcha input question correctly.
 // It returns a boolean value indicating whether or not the client answered correctly.
 func check(response string) (r RecaptchaResponse, err error) {
+	postError = false
+
 	netClient := &http.Client{
 		Timeout: time.Duration(timeResponse) * time.Second,
 	}
+
 	resp, err := netClient.PostForm(recaptchaServerName,
 		url.Values{"secret": {recaptchaPrivateKey}, "response": {response}})
 	if err != nil {
@@ -46,17 +49,20 @@ func check(response string) (r RecaptchaResponse, err error) {
 		postError = true
 		return
 	}
+
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("Read error: could not read body: %s", err)
 		return
 	}
+
 	err = json.Unmarshal(body, &r)
 	if err != nil {
 		fmt.Printf("Read error: got invalid JSON: %s", err)
 		return
 	}
+
 	return
 }
 
