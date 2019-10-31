@@ -21,10 +21,10 @@ func TestConfirm(t *testing.T) {
 		expectedResult      bool
 		errorMessage        string
 	}{
-		{"0.5", 200, `{"success": true, "score": 0.9}`, true, "It must be true"},
-		{"0.5", 200, `{"success": false, "score": 0.2}`, false, "It must be false"},
-		{"0.5", 200, `{"success": false}`, false, "It must be false"},
-		{"0.5", 500, `{"success": false}`, false, "It must be false"},
+		{"0.5", 200, `{"success": true, "score": 0.9}`, true, "It must be true when score is biggest than recaptchaScore"},
+		{"0.5", 200, `{"success": false, "score": 0.2}`, false, "It must be false when score is smaller than recaptchaScore"},
+		{"0.5", 200, `{"success": false}`, false, "It must be false when google doesnt return a score"},
+		{"0.5", 500, `{"success": false}`, false, "It must be false when google returns an error"},
 	}
 
 	for _, test := range tests {
@@ -66,10 +66,10 @@ func TestConfirmSlowResponse(t *testing.T) {
 		expectedResult      bool
 		errorMessage        string
 	}{
-		{"0.5", 200, `{"success": true, "score": 0.9}`, true, "It must be true"},
-		{"0.5", 200, `{"success": false, "score": 0.2}`, false, "It must be false"},
-		{"0.5", 200, `{"success": false}`, false, "It must be false"},
-		{"0.5", 500, `{"success": false}`, false, "It must be false"},
+		{"0.5", 200, `{"success": true, "score": 0.9}`, true, "It must be true when score is biggest than recaptchaScore"},
+		{"0.5", 200, `{"success": false, "score": 0.2}`, false, "It must be false when score is smaller than recaptchaScore"},
+		{"0.5", 200, `{"success": false}`, false, "It must be false when google doesnt return a score"},
+		{"0.5", 500, `{"success": false}`, false, "It must be false when google returns an error"},
 	}
 
 	for _, test := range tests {
