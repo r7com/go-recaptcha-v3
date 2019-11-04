@@ -33,7 +33,7 @@ func TestConfirm(t *testing.T) {
 
 		score, _ := strconv.ParseFloat(test.score, 32)
 		Init("SOME_KEY", float32(score), 2)
-		result, _ := Confirm("test")
+		result, _ := Confirm("test", "1.1.1.1")
 
 		assert.Equal(t, test.expectedResult, result, test.errorMessage)
 	}
@@ -55,7 +55,7 @@ func TestConfirmSlowResponse(t *testing.T) {
 
 	score, _ := strconv.ParseFloat("0.5", 32)
 	Init("SOME_KEY", float32(score), 2)
-	result, _ := Confirm("test")
+	result, _ := Confirm("test", "1.1.1.1")
 
 	assert.Equal(t, true, result, "Timeout expired!")
 
@@ -78,7 +78,7 @@ func TestConfirmSlowResponse(t *testing.T) {
 
 		score, _ := strconv.ParseFloat(test.score, 32)
 		Init("SOME_KEY", float32(score), 2)
-		result, _ := Confirm("test")
+		result, _ := Confirm("test", "1.1.1.1")
 
 		assert.Equal(t, test.expectedResult, result, test.errorMessage)
 	}
