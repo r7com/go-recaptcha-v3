@@ -49,8 +49,8 @@ func check(response string) (r RecaptchaResponse, err error) {
 		postError = true
 		return
 	}
-
 	defer resp.Body.Close()
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Printf("Read error: could not read body: %s", err)
@@ -71,7 +71,7 @@ func check(response string) (r RecaptchaResponse, err error) {
 // and the client's response input to that challenge to determine whether or not
 // the client answered the reCaptcha input question correctly.
 // It returns a boolean value indicating whether or not the client answered correctly.
-func Confirm(response string) (result bool, err error) {
+func Confirm(response string, ip string) (result bool, err error) {
 	result = false
 	resp, err := check(response)
 
@@ -83,7 +83,7 @@ func Confirm(response string) (result bool, err error) {
 		result = true
 	}
 
-	logCaptchaResult(result, resp.Score)
+	logCaptchaResult(result, resp.Score, ip)
 
 	return
 }
@@ -96,14 +96,16 @@ func Init(key string, score float32, time int) {
 	timeResponse = time
 }
 
-func logCaptchaResult(success bool, score float32) {
+func logCaptchaResult(success bool, score float32, ip string) {
 	if success {
-		log.Printf("Captcha: Valid token with score of %f\n", score)
-	} else {
-		if score > 0 {
-			log.Printf("Captcha: Valid token but refused due low score(got: %f, expected: %f)", score, recaptchaScore)
-		} else {
-			log.Printf("Captcha: Invalid token")
-		}
+		log.Printf("[%v] Captcha: Valid token with score of %f\n", ip, score)
+		return
 	}
+
+	if score > 0 {
+		log.Printf("[%v] Captcha: Valid token but refused due low score(got: %f, expected: %f)", ip, score, recaptchaScore)
+		return
+	}
+
+	log.Printf("[%v] Captcha: Invalid token", ip)
 }
