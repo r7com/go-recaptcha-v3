@@ -7,16 +7,22 @@
 package recaptcha
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
+
+	"go.elastic.co/apm/module/apmhttp"
 )
 
-type RecaptchaResponse struct {
+// Response holds the response provided by
+// google recaptcha
+type Response struct {
 	Success     bool      `json:"success"`
 	Score       float32   `json:"score"`
 	ChallengeTS time.Time `json:"challenge_ts"`
@@ -31,19 +37,11 @@ var recaptchaScore float32
 var timeResponse int
 var postError bool
 
-// check uses the client ip address, the challenge code from the reCaptcha form,
-// and the client's response input to that challenge to determine whether or not
-// the client answered the reCaptcha input question correctly.
-// It returns a boolean value indicating whether or not the client answered correctly.
-func check(response string) (r RecaptchaResponse, err error) {
+func check(ctx context.Context, response string) (r Response, err error) {
 	postError = false
 
-	netClient := &http.Client{
-		Timeout: time.Duration(timeResponse) * time.Second,
-	}
+	resp, err := performRecaptchaRequest(ctx, response)
 
-	resp, err := netClient.PostForm(recaptchaServerName,
-		url.Values{"secret": {recaptchaPrivateKey}, "response": {response}})
 	if err != nil {
 		log.Printf("Post error: %s\n", err)
 		postError = true
@@ -63,7 +61,21 @@ func check(response string) (r RecaptchaResponse, err error) {
 		return
 	}
 
+	fmt.Println("Captcha payload", r)
+
 	return
+}
+
+func performRecaptchaRequest(ctx context.Context, response string) (*http.Response, error) {
+	netClient := apmhttp.WrapClient(&http.Client{
+		Timeout: time.Duration(timeResponse) * time.Second,
+	})
+
+	payload := url.Values{"secret": {recaptchaPrivateKey}, "response": {response}}
+
+	request, _ := http.NewRequest("POST", recaptchaServerName, strings.NewReader(payload.Encode()))
+	request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	return netClient.Do(request.WithContext(ctx))
 }
 
 // Confirm is the public interface function.
@@ -71,9 +83,14 @@ func check(response string) (r RecaptchaResponse, err error) {
 // and the client's response input to that challenge to determine whether or not
 // the client answered the reCaptcha input question correctly.
 // It returns a boolean value indicating whether or not the client answered correctly.
-func Confirm(response string, ip string) (result bool, err error) {
+func Confirm(response, ip string) (result bool, err error) {
+	return ConfirmWithContext(context.Background(), response, ip)
+}
+
+// ConfirmWithContext ...
+func ConfirmWithContext(ctx context.Context, response string, ip string) (result bool, err error) {
 	result = false
-	resp, err := check(response)
+	resp, err := check(ctx, response)
 
 	if resp.Success == true && resp.Score >= recaptchaScore {
 		result = true
